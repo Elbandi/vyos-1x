@@ -145,8 +145,8 @@ shared-network {{ network.name }} {
         option netbios-name-servers {{ subnet.wins_server | join(', ') }};
         {%- endif %}
         {%- if subnet.static_route %}
-        option rfc3442-static-route {{ subnet.static_route }}{% if subnet.rfc3442_default_router %}, {{ subnet.rfc3442_default_router }}{% endif %};
-        option windows-static-route {{ subnet.static_route }};
+        option rfc3442-static-route {{ subnet.static_route | join(', ') }}{% if subnet.rfc3442_default_router %}, {{ subnet.rfc3442_default_router }}{% endif %};
+        option windows-static-route {{ subnet.static_route | join(', ') }};
         {%- endif %}
         {%- if subnet.ip_forwarding %}
         option ip-forwarding true;
@@ -466,9 +466,7 @@ def get_config():
                         'smtp_server': [],
                         'range': [],
                         'static_mapping': [],
-                        'static_subnet': '',
-                        'static_router': '',
-                        'static_route': '',
+                        'static_route': [],
                         'subnet_parameters': [],
                         'tftp_server': '',
                         'time_offset': '',
@@ -641,16 +639,12 @@ def get_config():
                     # This option specifies a list of static routes that the client should install in its routing
                     # cache. If multiple routes to the same destination are specified, they are listed in descending
                     # order of priority.
-                    if conf.exists('static-route destination-subnet'):
-                        subnet['static_subnet'] = conf.return_value('static-route destination-subnet')
+                    if conf.exists('static-route'):
                         # Required for global config section
                         dhcp['static_route'] = True
-
-                    if conf.exists('static-route router'):
-                        subnet['static_router'] = conf.return_value('static-route router')
-
-                    if subnet['static_router'] and subnet['static_subnet']:
-                        subnet['static_route'] = dhcp_static_route(subnet['static_subnet'], subnet['static_router'])
+                        for route in conf.list_nodes('static-route'):
+                            router = conf.return_value('static-route {0} router'.format(route))
+                            subnet['static_route'].append(dhcp_static_route(route, router))
 
                     # HACKS AND TRICKS
                     #
@@ -719,12 +713,6 @@ def verify(dhcp):
                               'lease subnet must be configured for each shared network.'.format(network['name']))
 
         for subnet in network['subnet']:
-            # Subnet static route declaration requires destination and router
-            if subnet['static_subnet'] or subnet['static_router']:
-                if not (subnet['static_subnet'] and subnet['static_router']):
-                    raise ConfigError('Please specify missing DHCP static-route parameter(s):\n' \
-                                      'destination-subnet | router')
-
             # Failover requires all 4 parameters set
             if subnet['failover_local_addr'] or subnet['failover_peer_addr'] or subnet['failover_name'] or subnet['failover_status']:
                 if not (subnet['failover_local_addr'] and subnet['failover_peer_addr'] and subnet['failover_name'] and subnet['failover_status']):
