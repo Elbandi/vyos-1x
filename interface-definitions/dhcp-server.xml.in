@@ -42,6 +42,37 @@
               <valueless/>
             </properties>
           </leafNode>
+          <tagNode name="bootp">
+            <properties>
+              <help>BOOTP parameters</help>
+            </properties>
+            <children>
+              <tagNode name="code">
+                <properties>
+                  <help>Code number for custom BOOTP options</help>
+                  <valueHelp>
+                    <format>1-255</format>
+                    <description>Number for this BOOTP code</description>
+                  </valueHelp>
+                  <constraint>
+                    <validator name="numeric" argument="--range 1-255"/>
+                  </constraint>
+                </properties>
+                <children>
+                  <leafNode name="type">
+                    <properties>
+                      <help>Code type</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="name">
+                    <properties>
+                      <help>Code name</help>
+                    </properties>
+                  </leafNode>
+                </children>
+              </tagNode>
+            </children>
+          </tagNode>
           <tagNode name="shared-network-name">
             <properties>
               <help>DHCP shared network name [REQUIRED]</help>

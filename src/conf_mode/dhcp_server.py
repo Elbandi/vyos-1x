@@ -68,6 +68,12 @@ option windows-static-route code 249 = array of integer 8;
 {% if wpad -%}
 option wpad-url code 252 = text;
 {% endif %}
+{% for space in bootp_space %}
+option space {{ space }};
+{%- endfor -%}
+{% for code in bootp_code %}
+option {{ code.name }} code {{ code.id }} = {{ code.type }};
+{%- endfor -%}
 
 {%- if global_parameters %}
 # The following {{ global_parameters | length }} line(s) were added as global-parameters in the CLI and have not been validated
@@ -249,6 +255,8 @@ default_config_data = {
     'host_decl_name': False,
     'static_route': False,
     'wpad': False,
+    'bootp_space': set(),
+    'bootp_code': [],
     'shared_network': [],
 }
 
@@ -350,6 +358,29 @@ def get_config():
     # check for global dynamic DNS upste
     if conf.exists('dynamic-dns-update'):
         dhcp['ddns_enable'] = True
+
+    if conf.exists('bootp'):
+        for code in conf.list_nodes('bootp code'):
+            conf.set_level('service dhcp-server bootp code {0}'.format(code))
+            config = {
+                'id': code,
+                'name': '',
+                'type': ''
+            }
+
+            if conf.exists('name'):
+                name = conf.return_value('name')
+                if "." in name:
+                    dhcp['bootp_space'].add(name.split(".")[0])
+                config['name'] = name
+
+            if conf.exists('type'):
+                config['type'] = conf.return_value('type')
+
+            dhcp['bootp_code'].append(config)
+
+    # Reset config level to matching hirachy
+    conf.set_level('service dhcp-server')
 
     # HACKS AND TRICKS
     #
