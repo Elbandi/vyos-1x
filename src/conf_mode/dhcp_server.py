@@ -196,6 +196,9 @@ shared-network {{ network.name }} {
             fixed-address {{ host.ip_address }};
             {%- endif %}
             hardware ethernet {{ host.mac_address }};
+            {%- for option in host.custom_options %}
+            option {{ option.name }} "{{ option.value }}";
+            {%- endfor %}
             {%- if host.static_parameters %}
             # The following {{ host.static_parameters | length }} line(s) were added as static-mapping-parameters in the CLI and have not been validated
             {%- for param in host.static_parameters %}
@@ -588,6 +591,7 @@ def get_config():
                                 'disabled': False,
                                 'ip_address': '',
                                 'mac_address': '',
+                                'custom_options': [],
                                 'static_parameters': []
                             }
 
@@ -603,6 +607,13 @@ def get_config():
                             # MAC address of requesting DHCP client
                             if conf.exists('mac-address'):
                                 mapping['mac_address'] = conf.return_value('mac-address')
+
+                            if conf.exists('option'):
+                               for name in conf.list_nodes('option'):
+                                   if conf.exists('option {0} value'.format(name)):
+                                       value = conf.return_value('option {0} value'.format(name))
+                                       option = { 'name': name, 'value': value }
+                                       mapping['custom_options'].append(option)
 
                             # HACKS AND TRICKS
                             #

@@ -386,6 +386,26 @@
                           </valueHelp>
                         </properties>
                       </leafNode>
+                      <tagNode name="option">
+                        <properties>
+                          <help>Host-specific settings</help>
+                          <valueHelp>
+                            <format>name</format>
+                            <description>options name</description>
+                          </valueHelp>
+                        </properties>
+                        <children>
+                          <leafNode name="value">
+                            <properties>
+                              <help>value</help>
+                              <valueHelp>
+                                <format>txt</format>
+                                <description>value data</description>
+                              </valueHelp>
+                            </properties>
+                          </leafNode>
+                        </children>
+                      </tagNode>
                       <leafNode name="static-mapping-parameters">
                         <properties>
                           <help>Additional static-mapping parameters for DHCP server.
