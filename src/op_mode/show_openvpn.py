@@ -23,14 +23,14 @@ from sys import exit
 from vyos.config import Config
 
 outp_tmpl = """
-{% if clients %}
 OpenVPN status on {{ intf }}
 
-Client CN       Remote Host           Local Host            TX bytes    RX bytes   Connected Since
----------       -----------           ----------            --------    --------   ---------------
-{%- for c in clients %}
-{{ "%-15s"|format(c.name) }} {{ "%-21s"|format(c.remote) }} {{ "%-21s"|format(local) }} {{ "%-9s"|format(c.tx_bytes) }}   {{ "%-9s"|format(c.rx_bytes) }}  {{ c.online_since }}
-{%- endfor %}
+Client CN       Remote Host           Local Host            Tunnel IP             TX bytes    RX bytes   Connected Since
+---------       -----------           ----------            ---------             --------    --------   ---------------
+{% if clients %}
+{%- for c in clients -%}
+{{ "%-15s"|format(c.name) }} {{ "%-21s"|format(c.remote) }} {{ "%-21s"|format(local) }} {{ "%-21s"|format(c.tunnel) }} {{ "%-9s"|format(c.tx_bytes) }}   {{ "%-9s"|format(c.rx_bytes) }}  {{ c.online_since }}
+{% endfor %}
 {% endif %}
 """
 
@@ -55,6 +55,7 @@ def get_status(mode, interface):
     # this is an empirical value - I assume we have no more then 999999
     # current OpenVPN connections
     routing_table_line = 999999
+    global_stats_line = 999999
 
     data = {
         'mode': mode,
@@ -106,6 +107,7 @@ def get_status(mode, interface):
                     client = {
                         'name': line.split(',')[0],
                         'remote': line.split(',')[1],
+                        'tunnel': 'N/A',
                         'rx_bytes': bytes2HR(line.split(',')[2]),
                         'tx_bytes': bytes2HR(line.split(',')[3]),
                         'online_since': line.split(',')[4]
@@ -113,6 +115,27 @@ def get_status(mode, interface):
 
                     data['clients'].append(client)
                     continue
+
+                # Virtual Address,Common Name,Real Address,Last Ref
+                # 192.168.1.1C,client1,172.18.202.10:55904,Mon Oct 28 22:30:14 2019
+                # 10.10.4.25,client3,172.18.204.10:41328,Mon Oct 28 22:30:15 2019
+                # 192.168.1.0/24,client1,172.18.202.10:55904,Mon Oct 28 20:14:26 2019
+                if (line_no >= 3) and (line_no < global_stats_line):
+                    # indicator that there are no more routes and we will continue with the
+                    # global stats
+                    if line == 'GLOBAL STATS':
+                        global_stats_line = line_no
+                        continue
+
+                    # skip server-configured and client-learned routes
+                    if 'C' in line or '/' in line:
+                        continue
+
+                    client_name = line.split(',')[1]
+                    index = next((i for i, item in enumerate(data['clients']) if item['name'] == client_name), None)
+                    if index is not None:
+                        data['clients'][index]['tunnel'] = line.split(',')[0]
+
             else:
                 if line_no == 2:
                     client = {
