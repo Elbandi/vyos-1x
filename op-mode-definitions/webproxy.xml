@@ -1,0 +1,233 @@
+<?xml version="1.0"?>
+<interfaceDefinition>
+  <node name="monitor">
+    <children>
+      <node name="webproxy">
+        <properties>
+          <help>show webproxy logs</help>
+        </properties>
+        <children>
+          <leafNode name="access-log">
+            <properties>
+              <help>Monitor the last lines of the squid access log</help>
+            </properties>
+            <command>sudo tail --follow=name /var/log/squid3/access.log</command>
+          </leafNode>
+          <leafNode name="cache-log">
+            <properties>
+              <help>Monitor the last lines of the squid cache log</help>
+            </properties>
+            <command>sudo tail --follow=name /var/log/squid3/cache.log</command>
+          </leafNode>
+        </children>
+      </node>
+    </children>
+  </node>
+
+  <node name="restart">
+    <children>
+      <node name="webproxy">
+        <properties>
+          <help>Restart a webproxy service</help>
+        </properties>
+        <children>
+          <leafNode name="clear-cache">
+            <properties>
+              <help>Restart webproxy service and recreate empty cache</help>
+            </properties>
+          </leafNode>
+          <command>sudo /opt/vyatta/bin/sudo-users/vyatta-restart-squid</command>
+        </children>
+      </node>
+    </children>
+  </node>
+
+
+  <node name="show">
+    <children>
+      <node name="webproxy">
+        <properties>
+          <help>Show webproxy information</help>
+        </properties>
+        <children>
+
+          <leafNode name="update-log">
+            <properties>
+              <help>Show update log for url-filter database</help>
+            </properties>
+            <command>
+            if cli-shell-api existsActive service webproxy url-filtering squidguard vyattaguard mode; then
+              if [ -r "${vyatta_sysconfdir}/config/url-filtering/sitefilter/updatestatus" ]; then
+                 cat "${vyatta_sysconfdir}/config/url-filtering/sitefilter/updatestatus"
+              else
+                 echo Update log not found
+              fi
+            else
+              if [ -r "${vyatta_sysconfdir}/config/url-filtering/squidguard/updatestatus" ]; then
+                 cat "${vyatta_sysconfdir}/config/url-filtering/squidguard/updatestatus"
+              else
+                 echo Update log not found
+              fi
+            fi
+            </command>
+          </leafNode>
+          <leafNode name="log">
+            <properties>
+              <help>Show contents of webproxy access log</help>
+            </properties>
+            <command>
+            LESSOPEN=less
+            if [ -e /var/log/squid3/access.log ]
+            then
+              sudo less $_vyatta_less_options \
+                --prompt="file %i of %m, page %dt of %D" \
+                -- `printf "%s\n" /var/log/squid3/access.log* | sort -nr`
+            else
+              echo No webproxy log
+            fi
+            </command>
+          </leafNode>
+          <node name="blacklist">
+            <properties>
+              <help>Show webproxy blacklist information</help>
+            </properties>
+            <children>
+              <tagNode name="search">
+                <properties>
+                  <help>Show webproxy blacklist search</help>
+                </properties>
+                <command>sudo ${vyos_op_scripts_dir}/vyatta-show-webproxy.pl --action="search-blacklist" --searchtext="$5"</command>
+              </tagNode>
+              <node name="log">
+                <properties>
+                  <help>Show contents of webproxy blacklist log</help>
+                </properties>
+                <command>
+                LESSOPEN=less
+                if [ -e /var/log/squid/blacklist.log ]; then
+                  less $_vyatta_less_options    \
+                    --prompt="file %i of %m, page %dt of %D" \
+                    -- `printf "%s\n" /var/log/squid/blacklist.log* | sort -nr`
+                else
+                  echo No webproxy blacklist log
+                fi
+                </command>
+                <children>
+                  <node name="http">
+                    <properties>
+                      <help>Show HTTP contents of webproxy blacklist log</help>
+                    </properties>
+                    <command>
+                    LESSOPEN=less
+                    if [ -e /var/log/squid/blacklist.log ]; then
+                      less $_vyatta_less_options    \
+                        --prompt="file %i of %m, page %dt of %D" \
+                        -- `printf "%s\n" /var/log/squid/blacklist.log* \
+                        | sort -nr` | grep ' http\:\/\/'
+                    else
+                      echo No webproxy blacklist log
+                    fi
+                    </command>
+                    <children>
+                      <leafNode name="summary">
+                        <properties>
+                          <help>Show HTTP summary of webproxy blacklist log</help>
+                        </properties>
+                        <command>sudo ${vyos_op_scripts_dir}/vyatta-sg-summary.pl --http-only</command>
+                      </leafNode>
+                    </children>
+                  </node>
+                  <node name="https">
+                    <properties>
+                      <help>Show HTTPS contents of webproxy blacklist log</help>
+                    </properties>
+                    <command>
+                    LESSOPEN=less
+                    if [ -e /var/log/squid/blacklist.log ]; then
+                      less $_vyatta_less_options    \
+                        --prompt="file %i of %m, page %dt of %D" \
+                        -- `printf "%s\n" /var/log/squid/blacklist.log* \
+                        | sort -nr` | grep '\:443 '
+                    else
+                      echo No webproxy blacklist log
+                    fi
+                    </command>
+                    <children>
+                      <leafNode name="summary">
+                        <properties>
+                          <help>Show HTTPS summary of webproxy blacklist log</help>
+                        </properties>
+                        <command>sudo ${vyos_op_scripts_dir}/vyatta-sg-summary.pl --https-only</command>
+                      </leafNode>
+                    </children>
+                  </node>
+                  <leafNode name="summary">
+                    <properties>
+                      <help>Show summary of webproxy blacklist log</help>
+                    </properties>
+                    <command>sudo ${vyos_op_scripts_dir}/vyatta-sg-summary.pl</command>
+                  </leafNode>
+                </children>
+              </node>
+              <tagNode name="domains">
+                <properties>
+                  <help>Show webproxy blacklist domains</help>
+                  <completionHelp>
+                    <script>sudo ${vyos_op_scripts_dir}/vyatta-show-webproxy.pl --action="show-blacklists"</script>
+                  </completionHelp>
+                </properties>
+                <command>sudo ${vyos_op_scripts_dir}/vyatta-show-webproxy.pl --action="show-blacklist-domains" --category="$5"</command>
+              </tagNode>
+              <leafNode name="categories">
+                <properties>
+                  <help>Show webproxy blacklist categories</help>
+                </properties>
+                <command>sudo ${vyos_op_scripts_dir}/vyatta-show-webproxy.pl --action="show-blacklists"</command>
+              </leafNode>
+              <tagNode name="urls">
+                <properties>
+                  <help>Show webproxy blacklist urls for a given category</help>
+                  <completionHelp>
+                    <script>sudo ${vyos_op_scripts_dir}/vyatta-show-webproxy.pl --action="show-blacklists"</script>
+                  </completionHelp>
+                </properties>
+                <command>sudo ${vyos_op_scripts_dir}/vyatta-show-webproxy.pl --action="show-blacklist-urls" --category="$5"</command>
+              </tagNode>
+            </children>
+          </node>
+        </children>
+      </node>
+    </children>
+  </node>
+
+  <node name="update">
+    <properties>
+      <help>Update data for a service</help>
+    </properties>
+    <children>
+      <node name="webproxy">
+        <properties>
+          <help>Update webproxy</help>
+        </properties>
+        <children>
+
+          <node name="blacklists">
+            <properties>
+              <help>Update the webproxy blacklist database</help>
+            </properties>
+            <command>sudo ${vyos_op_scripts_dir}/vyatta-sg-blacklist.pl --update-blacklist</command>
+            <children>
+              <tagNode name="category">
+                <properties>
+                  <help>Update a category of the webproxy blacklist database</help>
+                </properties>
+                <children/>
+              </tagNode>
+            </children>
+          </node>
+        </children>
+      </node>
+    </children>
+  </node>
+
+</interfaceDefinition>

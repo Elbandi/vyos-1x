@@ -1,0 +1,734 @@
+<?xml version="1.0"?>
+<interfaceDefinition>
+  <node name="service">
+    <children>
+      <node name="webproxy" owner="${vyos_conf_scripts_dir}/webproxy.py">
+        <properties>
+          <help>Webproxy service settings</help>
+          <priority>917</priority>
+        </properties>
+        <children>
+          <node name="whitelist">
+            <properties>
+              <help>IPv4 adresses and networks where proxy should be bypassed</help>
+            </properties>
+            <children>
+              <leafNode name="destination-address">
+                <properties>
+                  <multi/>
+                  <help>Destination address/network to bypass the transparent proxy</help>
+                  <valueHelp>
+                    <format>ipv4 </format>
+                    <description>IPv4 destination address to bypass</description>
+                  </valueHelp>
+                  <valueHelp>
+                    <format>ipv4net </format>
+                    <description>IPv4 destination network to bypass</description>
+                  </valueHelp>
+                </properties>
+              </leafNode>
+              <leafNode name="source-address">
+                <properties>
+                  <multi/>
+                  <help>Source address/network to bypass the transparent proxy</help>
+                  <valueHelp>
+                    <format>ipv4 </format>
+                    <description>IPv4 source address to bypass</description>
+                  </valueHelp>
+                  <valueHelp>
+                    <format>ipv4net </format>
+                    <description>IPv4 source network to bypass</description>
+                  </valueHelp>
+                </properties>
+              </leafNode>
+            </children>
+          </node>
+          <leafNode name="maximum-object-size">
+            <properties>
+              <help>Maximum size of object to be stored in cache in kilobytes</help>
+              <valueHelp>
+                <format>u32</format>
+                <description>Object size in KB</description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--non-negative"/>
+              </constraint>
+            </properties>
+          </leafNode>
+          <leafNode name="domain-block">
+            <properties>
+              <multi/>
+              <help>Domain name to block</help>
+            </properties>
+          </leafNode>
+          <leafNode name="append-domain">
+            <properties>
+              <help>Default domain name</help>
+              <valueHelp>
+                <format>&lt;domain&gt;</format>
+                <description>Domain to use for urls that do not contain a '.'</description>
+              </valueHelp>
+            </properties>
+          </leafNode>
+          <leafNode name="default-port">
+            <properties>
+              <help>Default port</help>
+              <valueHelp>
+                <format>1025-65535</format>
+                <description>Default port number (default 3128) </description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--range 1025-65535"/>
+              </constraint>
+            </properties>
+          </leafNode>
+          <node name="url-filtering">
+            <properties>
+              <help>URL filtering settings</help>
+            </properties>
+            <children>
+              <node name="squidguard">
+                <properties>
+                  <help>URL filtering via squidguard redirector</help>
+                </properties>
+                <children>
+                  <leafNode name="default-action">
+                    <properties>
+                      <help>Default action</help>
+                      <constraint>
+                        <regex>allow|block</regex>
+                      </constraint>
+                      <constraintErrorMessage></constraintErrorMessage>
+                      <valueHelp>
+                        <format>allow </format>
+                        <description>Default filter action to allow (default)</description>
+                      </valueHelp>
+                      <valueHelp>
+                        <format>block </format>
+                        <description>Default filter action to block </description>
+                      </valueHelp>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="enable-safe-search">
+                    <properties>
+                      <help>Enable safe-mode search on popular search engines</help>
+                      <valueless/>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="local-ok-url">
+                    <properties>
+                      <multi/>
+                      <help>Local URL to allow</help>
+                      <valueHelp>
+                        <format>&lt;text&gt;</format>
+                        <description> URL to allow as ok (without http://)</description>
+                      </valueHelp>
+                    </properties>
+                  </leafNode>
+                  <tagNode name="time-period">
+                    <properties>
+                      <help>Time period name</help>
+                    </properties>
+                    <children>
+                      <leafNode name="description">
+                        <properties>
+                          <help>Time-period description</help>
+                        </properties>
+                      </leafNode>
+                      <tagNode name="days">
+                        <properties>
+                          <help>Time-period days</help>
+                          <constraint>
+                            <regex>Sun|Mon|Tue|Wed|Thu|Fri|Sat|weekdays|weekend|all</regex>
+                          </constraint>
+                          <constraintErrorMessage>Days must be one of 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'weekdays', 'weekend', 'all'.</constraintErrorMessage>
+                          <valueHelp>
+                            <format>Sun </format>
+                            <description>Sunday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>Mon </format>
+                            <description>Monday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>Tue </format>
+                            <description>Tuesday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>Wed </format>
+                            <description>Wednesday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>Thu </format>
+                            <description>Thursday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>Fri </format>
+                            <description>Friday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>Sat </format>
+                            <description>Saturday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>weekdays </format>
+                            <description>Monday through Friday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>weekends </format>
+                            <description>Saturday and Sunday</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>all </format>
+                            <description>All days of the week</description>
+                          </valueHelp>
+                        </properties>
+                        <children>
+                          <leafNode name="time">
+                            <properties>
+                              <help>Time for time-period</help>
+                              <valueHelp>
+                                <format>&lt;hh:mm - hh:mm&gt; </format>
+                                <description>Time range in 24hr time</description>
+                              </valueHelp>
+                            </properties>
+                          </leafNode>
+                        </children>
+                      </tagNode>
+                    </children>
+                  </tagNode>
+                  <leafNode name="block-category">
+                    <properties>
+                      <multi/>
+                      <help>Category to block</help>
+                    </properties>
+                  </leafNode>
+                  <tagNode name="rule">
+                    <properties>
+                      <help>URL filter rule for a source-group</help>
+                      <valueHelp>
+                        <format>1-1024</format>
+                        <description>Rule number</description>
+                      </valueHelp>
+                      <constraint>
+                        <validator name="numeric" argument="--range 1-1024"/>
+                      </constraint>
+                    </properties>
+                    <children>
+                      <leafNode name="default-action">
+                        <properties>
+                          <help>Default action</help>
+                          <constraint>
+                            <regex>allow|block</regex>
+                          </constraint>
+                          <constraintErrorMessage></constraintErrorMessage>
+                          <valueHelp>
+                            <format>allow </format>
+                            <description>Default filter action to allow (default)</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>block </format>
+                            <description>Default filter action to block </description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="enable-safe-search">
+                        <properties>
+                          <help>Enable safe-mode search on popular search engines</help>
+                          <valueless/>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="local-ok-url">
+                        <properties>
+                          <multi/>
+                          <help>Local URL to allow</help>
+                          <valueHelp>
+                            <format>&lt;text&gt;</format>
+                            <description> URL to allow as ok (without http://)</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="time-period">
+                        <properties>
+                          <help>Time-period for this rule</help>
+                          <valueHelp>
+                            <format>&lt;text&gt;</format>
+                            <description> Time period for this rule</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="block-category">
+                        <properties>
+                          <multi/>
+                          <help>Category to block</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="allow-category">
+                        <properties>
+                          <multi/>
+                          <help>Category to allow</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="local-block">
+                        <properties>
+                          <multi/>
+                          <help>Local site to block</help>
+                          <valueHelp>
+                            <format>ipv4 </format>
+                            <description>IP address of site to block (without http://)</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>&lt;domain name&gt; </format>
+                            <description>IP address of site to block </description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="log">
+                        <properties>
+                          <multi/>
+                          <help>Log block category</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="local-ok">
+                        <properties>
+                          <multi/>
+                          <help>Local site to allow</help>
+                          <valueHelp>
+                            <format>ipv4 </format>
+                            <description>IP address of site to allow as ok (without http://)</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>&lt;domain name&gt; </format>
+                            <description>Domain to allow as ok</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="source-group">
+                        <properties>
+                          <help>Source-group for this rule [REQUIRED]</help>
+                          <valueHelp>
+                            <format>&lt;text&gt;</format>
+                            <description> Source group for this rule</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="description">
+                        <properties>
+                          <help>Description of rule</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="local-block-keyword">
+                        <properties>
+                          <multi/>
+                          <help>Local keyword to block</help>
+                          <valueHelp>
+                            <format>&lt;text&gt;</format>
+                            <description> Keyword (or regex) to block</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="local-block-url">
+                        <properties>
+                          <multi/>
+                          <help>Local URL to block</help>
+                          <valueHelp>
+                            <format>&lt;text&gt;</format>
+                            <description> Local URL to block (without http://)</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="redirect-url">
+                        <properties>
+                          <help>Redirect URL for filtered websites</help>
+                          <valueHelp>
+                            <format>&lt;text&gt;</format>
+                            <description> URL for redirect (example http://www.google.com)</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="allow-ipaddr-url">
+                        <properties>
+                          <help>Allow option to allow IP address URLs</help>
+                          <valueless/>
+                        </properties>
+                      </leafNode>
+                    </children>
+                  </tagNode>
+                  <leafNode name="allow-category">
+                    <properties>
+                      <multi/>
+                      <help>Category to allow</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="local-block">
+                    <properties>
+                      <multi/>
+                      <help>Local site to block</help>
+                      <valueHelp>
+                        <format>ipv4 </format>
+                        <description>IP address of site to block (without http://)</description>
+                      </valueHelp>
+                      <valueHelp>
+                        <format>&lt;domain name&gt; </format>
+                        <description>IP address of site to block </description>
+                      </valueHelp>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="log">
+                    <properties>
+                      <multi/>
+                      <help>Log block category</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="local-ok">
+                    <properties>
+                      <multi/>
+                      <help>Local site to allow</help>
+                      <valueHelp>
+                        <format>ipv4 </format>
+                        <description>IP address of site to allow as ok (without http://)</description>
+                      </valueHelp>
+                      <valueHelp>
+                        <format>&lt;domain name&gt; </format>
+                        <description>Domain to allow as ok</description>
+                      </valueHelp>
+                    </properties>
+                  </leafNode>
+                  <tagNode name="source-group">
+                    <properties>
+                      <help>Source group name</help>
+                    </properties>
+                    <children>
+                      <leafNode name="address">
+                        <properties>
+                          <multi/>
+                          <help>Address for source-group</help>
+                          <valueHelp>
+                            <format>ipv4 </format>
+                            <description>IPv4 address</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>ipv4net</format>
+                            <description>IPv4 network</description>
+                          </valueHelp>
+                          <valueHelp>
+                            <format>&lt;x.x.x.x&gt;-&lt;x.x.x.x&gt; </format>
+                            <description>IPv4 address range</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="ldap-user-search">
+                        <properties>
+                          <multi/>
+                          <help>LDAP search expression for a user group</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="user">
+                        <properties>
+                          <help>List of user names</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="description">
+                        <properties>
+                          <help>Description for source-group</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="domain">
+                        <properties>
+                          <multi/>
+                          <help>Domain for source-group</help>
+                          <valueHelp>
+                            <format>&lt;text&gt;</format>
+                            <description> Domain name for the source-group</description>
+                          </valueHelp>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="ldap-ip-search">
+                        <properties>
+                          <multi/>
+                          <help>LDAP search expression for an IP address list</help>
+                        </properties>
+                      </leafNode>
+                    </children>
+                  </tagNode>
+                  <node name="auto-update">
+                    <properties>
+                      <help>Auto update settings</help>
+                    </properties>
+                    <children>
+                      <leafNode name="update-hour">
+                        <properties>
+                          <help>Hour of day for database update [REQUIRED]</help>
+                          <valueHelp>
+                            <format>0-23</format>
+                            <description>Hour for database update</description>
+                          </valueHelp>
+                          <constraint>
+                            <validator name="numeric" argument="--range 0-23"/>
+                          </constraint>
+                        </properties>
+                      </leafNode>
+                    </children>
+                  </node>
+                  <leafNode name="local-block-keyword">
+                    <properties>
+                      <multi/>
+                      <help>Local keyword to block</help>
+                      <valueHelp>
+                        <format>&lt;text&gt;</format>
+                        <description> Keyword (or regex) to block</description>
+                      </valueHelp>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="local-block-url">
+                    <properties>
+                      <multi/>
+                      <help>Local URL to block</help>
+                      <valueHelp>
+                        <format>&lt;text&gt;</format>
+                        <description> Local URL to block (without http://)</description>
+                      </valueHelp>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="redirect-url">
+                    <properties>
+                      <help>Redirect URL for filtered websites</help>
+                      <valueHelp>
+                        <format>&lt;text&gt;</format>
+                        <description> URL for redirect (default http://block.vyos.net)</description>
+                      </valueHelp>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="allow-ipaddr-url">
+                    <properties>
+                      <help>Allow option to allow IP address URLs</help>
+                      <valueless/>
+                    </properties>
+                  </leafNode>
+                </children>
+              </node>
+              <leafNode name="disable">
+                <properties>
+                  <help>Disable url-filtering</help>
+                  <valueless/>
+                </properties>
+              </leafNode>
+            </children>
+          </node>
+          <leafNode name="disable-access-log">
+            <properties>
+              <help>Disable logging of http accesses</help>
+              <valueless/>
+            </properties>
+          </leafNode>
+          <tagNode name="listen-address">
+            <properties>
+              <help>IPv4 address for webproxy listener [REQUIRED]</help>
+              <constraint>
+                <validator name="ipv4-address"/>
+              </constraint>
+            </properties>
+            <children>
+              <leafNode name="port">
+                <properties>
+                  <help>Default port</help>
+                  <valueHelp>
+                    <format>1025-65535</format>
+                    <description>Default port number</description>
+                  </valueHelp>
+                  <constraint>
+                    <validator name="numeric" argument="--range 1025-65535"/>
+                  </constraint>
+                </properties>
+              </leafNode>
+              <leafNode name="disable-transparent">
+                <properties>
+                  <help>Disable transparent mode</help>
+                  <valueless/>
+                </properties>
+              </leafNode>
+            </children>
+          </tagNode>
+          <leafNode name="mem-cache-size">
+            <properties>
+              <help>Memory cache size in MB</help>
+              <valueHelp>
+                <format>u32</format>
+                <description>Memory cache size in MB </description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--non-negative"/>
+              </constraint>
+            </properties>
+          </leafNode>
+          <leafNode name="cache-size">
+            <properties>
+              <help>Disk cache size in MB</help>
+              <valueHelp>
+                <format>u32</format>
+                <description>Disk cache size in MB (default 100)</description>
+              </valueHelp>
+              <valueHelp>
+                <format>0</format>
+                <description>Disable disk caching</description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--non-negative"/>
+              </constraint>
+            </properties>
+          </leafNode>
+          <leafNode name="domain-noncache">
+            <properties>
+              <multi/>
+              <help>Domain name to access without caching</help>
+            </properties>
+          </leafNode>
+          <leafNode name="minimum-object-size">
+            <properties>
+              <help>Minimum size of object to be stored in cache in kilobytes</help>
+              <valueHelp>
+                <format>u32</format>
+                <description>Object size in KB</description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--non-negative"/>
+              </constraint>
+            </properties>
+          </leafNode>
+          <leafNode name="reply-body-max-size">
+            <properties>
+              <help>Maximum reply body size in KB</help>
+              <valueHelp>
+                <format>u32</format>
+                <description>Reply size in KB</description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--non-negative"/>
+              </constraint>
+            </properties>
+          </leafNode>
+          <leafNode name="outgoing-address">
+            <properties>
+              <help>IPv4 outgoing address for webproxy</help>
+              <constraint>
+                <validator name="ipv4-address"/>
+              </constraint>
+            </properties>
+          </leafNode>
+          <leafNode name="reply-block-mime">
+            <properties>
+              <multi/>
+              <help>MIME type to block</help>
+            </properties>
+          </leafNode>
+          <node name="authentication">
+            <properties>
+              <help>Authentication settings</help>
+            </properties>
+            <children>
+              <node name="ldap">
+                <properties>
+                  <help>LDAP authentication settings</help>
+                </properties>
+                <children>
+                  <leafNode name="password">
+                    <properties>
+                      <help>LDAP password to bind with</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="persistent-connection">
+                    <properties>
+                      <help>Use persistent LDAP connection</help>
+                      <valueless/>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="base-dn">
+                    <properties>
+                      <help>LDAP base DN to search</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="bind-dn">
+                    <properties>
+                      <help>LDAP DN to bind with</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="use-ssl">
+                    <properties>
+                      <help>Use SSL/TLS for LDAP connection</help>
+                      <valueless/>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="port">
+                    <properties>
+                      <help>LDAP port to use</help>
+                      <valueHelp>
+                        <format>1-65535</format>
+                        <description>Default port number</description>
+                      </valueHelp>
+                      <constraint>
+                        <validator name="numeric" argument="--range 1-65535"/>
+                      </constraint>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="username-attribute">
+                    <properties>
+                      <help>LDAP username attribute</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="version">
+                    <properties>
+                      <help>LDAP version to use</help>
+                      <constraint>
+                        <validator name="numeric" argument="--non-negative"/>
+                      </constraint>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="server">
+                    <properties>
+                      <help>LDAP server to use</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="filter-expression">
+                    <properties>
+                      <help>Filter expression to perform LDAP search with</help>
+                    </properties>
+                  </leafNode>
+                </children>
+              </node>
+              <leafNode name="credentials-ttl">
+                <properties>
+                  <help>Authenticated session time to live in minutes</help>
+                  <constraint>
+                    <validator name="numeric" argument="--non-negative"/>
+                  </constraint>
+                </properties>
+              </leafNode>
+              <leafNode name="method">
+                <properties>
+                  <help>Authentication method</help>
+                  <constraint>
+                    <regex>ldap</regex>
+                  </constraint>
+                  <constraintErrorMessage>The only supported method is LDAP now</constraintErrorMessage>
+                </properties>
+              </leafNode>
+              <leafNode name="realm">
+                <properties>
+                  <help>Name of authentication realm (e.g. "My Company proxy server")</help>
+                </properties>
+              </leafNode>
+              <leafNode name="children">
+                <properties>
+                  <help>Number of authentication helper processes</help>
+                  <constraint>
+                    <validator name="numeric" argument="--non-negative"/>
+                  </constraint>
+                </properties>
+              </leafNode>
+            </children>
+          </node>
+        </children>
+      </node>
+    </children>
+  </node>
+</interfaceDefinition>
