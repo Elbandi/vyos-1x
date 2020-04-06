@@ -85,10 +85,17 @@ server {
 
         error_page 501 502 503 =200 @50*_json;
 
+{% if api_somewhere %}
+        location @50*_json {
+                default_type application/json;
+                return 200 '{"error": "service https api unavailable at this proxy address: set service https api-restrict virtual-host"}';
+        }
+{% else %}
         location @50*_json {
                 default_type application/json;
                 return 200 '{"error": "Start service in configuration mode: set service https api"}';
         }
+{% endif %}
 
 }
 
@@ -152,8 +159,10 @@ def get_config():
                     # certbot organizes certificates by first domain
                     sb['certbot_dir'] = certbot_domains[0]
 
+    api_somewhere = False
     api_data = {}
     if conf.exists('api'):
+        api_somewhere = True
         api_data = vyos.defaults.api_data
         if conf.exists('api port'):
             port = conf.return_value('api port')
@@ -174,7 +183,9 @@ def get_config():
                 if block['id'] in vhost_list:
                     block['api'] = api_data
 
-    https = {'server_block_list' : server_block_list, 'certbot': certbot}
+    https = {'server_block_list' : server_block_list,
+             'api_somewhere': api_somewhere,
+             'certbot': certbot}
     return https
 
 def verify(https):
