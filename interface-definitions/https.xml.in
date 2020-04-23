@@ -95,12 +95,67 @@
                   </constraint>
                 </properties>
               </leafNode>
-              <leafNode name="api">
+              <leafNode name="mode">
                 <properties>
-                  <help>Enable api for this virtual host</help>
-                  <valueless/>
+                  <help>virtualhost mode</help>
+                  <valueHelp>
+                    <format>api</format>
+                    <description>Enable api for this virtual host</description>
+                  </valueHelp>
+                  <valueHelp>
+                    <format>proxy</format>
+                    <description>Use as a reverse proxy</description>
+                  </valueHelp>
+                  <completionHelp>
+                    <list>api proxy</list>
+                  </completionHelp>
+                  <constraint>
+                    <regex>(api|proxy)</regex>
+                  </constraint>
+                  <constraintErrorMessage>invalid virtualhost mode</constraintErrorMessage>
                 </properties>
               </leafNode>
+              <node name="proxy">
+                <properties>
+                  <help>Reverse proxy</help>
+                </properties>
+                <children>
+                  <leafNode name="dest-address">
+                    <properties>
+                      <help>Address to destination for proxy requests</help>
+                      <valueHelp>
+                        <format>ipv4</format>
+                       <description>HTTPS IPv4 address</description>
+                      </valueHelp>
+                      <valueHelp>
+                        <format>ipv6</format>
+                        <description>HTTPS IPv6 address</description>
+                      </valueHelp>
+                      <valueHelp>
+                        <format>'*'</format>
+                        <description>any</description>
+                      </valueHelp>
+                      <constraint>
+                        <validator name="ipv4-address"/>
+                        <validator name="ipv6-address"/>
+                        <regex>\*$</regex>
+                      </constraint>
+                    </properties>
+                  </leafNode>
+                  <leafNode name='dest-port'>
+                    <properties>
+                      <help>Port to destination for proxy requests; default 443</help>
+                      <valueHelp>
+                        <format>1-65535</format>
+                        <description>Numeric IP port</description>
+                      </valueHelp>
+                      <constraint>
+                        <validator name="numeric" argument="--range 1-65535"/>
+                      </constraint>
+                    </properties>
+                  </leafNode>
+                </children>
+              </node>
             </children>
           </tagNode>
           <node name="api" owner="${vyos_conf_scripts_dir}/http-api.py">
