@@ -103,6 +103,8 @@ server {
         location / {
                 proxy_pass http://{{ server.proxy.address }}:{{ server.proxy.port }};
                 proxy_buffering off;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
 {% endif %}
 
