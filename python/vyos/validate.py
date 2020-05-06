@@ -13,6 +13,9 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import re
+
 import netifaces
 import ipaddress
 
@@ -166,6 +169,22 @@ def is_subnet_connected(subnet, primary=False):
                 addr = ip['addr'].split('%')[0]
                 if ipaddress.ip_address(addr) in ipaddress.ip_network(subnet):
                     return True
+
+    return False
+
+
+def checkCertHeader(header, filename):
+    """
+    Verify if filename contains specified header.
+    Returns True if match is found, False if no match or file is not found
+    """
+    if not os.path.isfile(filename):
+        return False
+
+    with open(filename, 'r') as f:
+        for line in f:
+            if re.match(header, line):
+                return True
 
     return False
 

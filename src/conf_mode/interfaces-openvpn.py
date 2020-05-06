@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import re
 
 from jinja2 import Template
 from copy import deepcopy
@@ -32,7 +31,7 @@ from time import sleep
 from vyos import ConfigError
 from vyos.config import Config
 from vyos.ifconfig import Interface
-from vyos.validate import is_addr_assigned
+from vyos.validate import is_addr_assigned,checkCertHeader
 
 user = 'openvpn'
 group = 'openvpn'
@@ -361,21 +360,6 @@ def fixup_permission(filename, permission=S_IRUSR):
         uid = getpwnam('root').pw_uid
         gid = getgrnam('vyattacfg').gr_gid
         os.chown(filename, uid, gid)
-
-def checkCertHeader(header, filename):
-    """
-    Verify if filename contains specified header.
-    Returns True if match is found, False if no match or file is not found
-    """
-    if not os.path.isfile(filename):
-        return False
-
-    with open(filename, 'r') as f:
-        for line in f:
-            if re.match(header, line):
-                return True
-
-    return False
 
 def get_config():
     openvpn = deepcopy(default_config_data)
