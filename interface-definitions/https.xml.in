@@ -95,6 +95,12 @@
                   </constraint>
                 </properties>
               </leafNode>
+              <leafNode name="api">
+                <properties>
+                  <help>Enable api for this virtual host</help>
+                  <valueless/>
+                </properties>
+              </leafNode>
             </children>
           </tagNode>
           <node name="api" owner="${vyos_conf_scripts_dir}/http-api.py">
@@ -145,19 +151,6 @@
                   <help>Debug</help>
                   <valueless/>
                   <hidden/>
-                </properties>
-              </leafNode>
-            </children>
-          </node>
-          <node name="api-restrict">
-            <properties>
-              <help>Restrict api proxy to subset of virtual hosts</help>
-            </properties>
-            <children>
-              <leafNode name="virtual-host">
-                <properties>
-                  <help>Restrict proxy to virtual host(s)</help>
-                  <multi/>
                 </properties>
               </leafNode>
             </children>

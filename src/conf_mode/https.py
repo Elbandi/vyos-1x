@@ -81,8 +81,8 @@ server {
 
         # proxy settings for HTTP API, if enabled; 503, if not
         location ~ /(retrieve|configure|config-file|image|generate|show) {
-{% if server.api %}
-                proxy_pass http://localhost:{{ server.api.port }};
+{% if (api_data) and (server.api) %}
+                proxy_pass http://localhost:{{ api_data.port }};
                 proxy_buffering off;
 {% else %}
                 return 503;
@@ -91,7 +91,7 @@ server {
 
         error_page 501 502 503 =200 @50*_json;
 
-{% if api_somewhere %}
+{% if api_data %}
         location @50*_json {
                 default_type application/json;
                 return 200 '{"error": "service https api unavailable at this proxy address: set service https api-restrict virtual-host"}';
@@ -113,7 +113,7 @@ default_server_block = {
     'address'   : '*',
     'port'      : '443',
     'name'      : ['_'],
-    'api'       : {},
+    'api'       : False,
     'cert'      : {},
     'vyos_cert' : {},
     'certbot'   : False
@@ -152,6 +152,9 @@ def get_config():
                 key_file = conf.return_values(f'virtual-host {vhost} key-file')
                 server_block['cert']['key_file'] = key_file
 
+            if conf.exists(f'virtual-host {vhost} api'):
+                server_block['api'] = True
+
             server_block_list.append(server_block)
 
     vyos_cert_data = {}
@@ -176,32 +179,15 @@ def get_config():
                     # certbot organizes certificates by first domain
                     sb['certbot_dir'] = certbot_domains[0]
 
-    api_somewhere = False
     api_data = {}
     if conf.exists('api'):
-        api_somewhere = True
         api_data = vyos.defaults.api_data
         if conf.exists('api port'):
             port = conf.return_value('api port')
             api_data['port'] = port
-        if conf.exists('api-restrict virtual-host'):
-            vhosts = conf.return_values('api-restrict virtual-host')
-            api_data['vhost'] = vhosts[:]
-
-    if api_data:
-        # we do not want to include 'vhost' key as part of
-        # vyos.defaults.api_data, so check for key existence
-        vhost_list = api_data.get('vhost')
-        if vhost_list is None:
-            for block in server_block_list:
-                block['api'] = api_data
-        else:
-            for block in server_block_list:
-                if block['id'] in vhost_list:
-                    block['api'] = api_data
 
     https = {'server_block_list' : server_block_list,
-             'api_somewhere': api_somewhere,
+             'api_data': api_data,
              'certbot': certbot}
     return https
 
