@@ -95,6 +95,31 @@
                   </constraint>
                 </properties>
               </leafNode>
+              <leafNode name="allow">
+                <properties>
+                  <help>Allows access for the specified network or address</help>
+                  <completionHelp>
+                    <list>all</list>
+                  </completionHelp>
+                  <valueHelp>
+                    <format>ipv4net</format>
+                    <description>IPv4 address and prefix length</description>
+                  </valueHelp>
+                  <valueHelp>
+                    <format>ipv6net</format>
+                    <description>IPv6 address and prefix length</description>
+                  </valueHelp>
+                  <valueHelp>
+                    <format>all</format>
+                    <description>All address</description>
+                  </valueHelp>
+                  <constraint>
+                    <validator name="ip-cidr"/>
+                    <regex>all</regex>
+                  </constraint>
+                  <multi/>
+                </properties>
+              </leafNode>
               <leafNode name="mode">
                 <properties>
                   <help>virtualhost mode</help>

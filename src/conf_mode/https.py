@@ -79,6 +79,13 @@ server {
         # proxy settings for HTTP API, if enabled; 503, if not
         location ~ /(retrieve|configure|config-file|image|generate|show) {
 {% if (api_data) and (server.api) %}
+{% if server.access %}
+{% for host in server.access %}
+                allow {{ host }};
+{% endfor %}
+                deny  all;
+{% endif %}
+
                 proxy_pass http://localhost:{{ api_data.port }};
                 proxy_buffering off;
 {% else %}
@@ -89,6 +96,12 @@ server {
         error_page 501 502 503 =200 @50*_json;
 
 {% if api_data %}
+        error_page 403 =200 @403_json;
+        location @403_json {
+                default_type application/json;
+                return 200 '{"error": "service https api unavailable from your address"}';
+        }
+
         location @50*_json {
                 default_type application/json;
                 return 200 '{"error": "service https api unavailable at this proxy address: set service https api-restrict virtual-host"}';
@@ -101,6 +114,13 @@ server {
 {% endif %}
 {% else %}
         location / {
+{% if server.access %}
+{% for host in server.access %}
+                allow {{ host }};
+{% endfor %}
+                deny  all;
+{% endif %}
+
                 proxy_pass http://{{ server.proxy.address }}:{{ server.proxy.port }};
                 proxy_buffering off;
                 proxy_set_header Host $host;
@@ -120,6 +140,7 @@ default_server_block = {
     'port'      : '443',
     'name'      : ['_'],
     'mode'      : '',
+    'access'    : [],
     'cert'      : {},
     'vyos_cert' : {},
     'certbot'   : False
@@ -157,6 +178,8 @@ def get_config():
             if conf.exists(f'virtual-host {vhost} key-file'):
                 key_file = conf.return_values(f'virtual-host {vhost} key-file')
                 server_block['cert']['key_file'] = key_file
+            if conf.exists(f'virtual-host {vhost} allow'):
+                server_block['access'] = conf.return_values(f'virtual-host {vhost} allow')
 
             if conf.exists(f'virtual-host {vhost} mode'):
                 mode = conf.return_value(f'virtual-host {vhost} mode')
