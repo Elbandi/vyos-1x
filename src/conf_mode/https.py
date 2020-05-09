@@ -38,7 +38,9 @@ config_tmpl = """
 #
 server {
         listen 80 default_server;
+{% if ipv6_enabled %}
         listen [::]:80 default_server;
+{% endif %}
         server_name _;
         return 301 https://$server_name$request_uri;
 }
@@ -53,7 +55,9 @@ server {
 {% endif %}
 {% if server.address == '*' %}
         listen {{ server.port }}{{ ssl }};
+{% if ipv6_enabled %}
         listen [::]:{{ server.port }}{{ ssl }};
+{% endif %}
 {% else %}
         listen {{ server.address }}:{{ server.port }}{{ ssl }};
 {% endif %}
@@ -161,6 +165,8 @@ def get_config():
         if conf.exists('service tftp-server directory'):
             tftp_root = conf.return_value('service tftp-server directory')
 
+    ipv6_enabled = not conf.exists('system ipv6 disable')
+
     conf.set_level('service https')
 
     if not conf.exists('virtual-host'):
@@ -234,6 +240,7 @@ def get_config():
     https = {'server_block_list' : server_block_list,
              'api_data': api_data,
              'certbot': certbot,
+             'ipv6_enabled': ipv6_enabled,
              'tftp_root' : tftp_root}
     return https
 
