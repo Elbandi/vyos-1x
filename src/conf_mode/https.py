@@ -121,11 +121,16 @@ server {
                 deny  all;
 {% endif %}
 
+{% if server.mode == "tftp" %}
+                keepalive_timeout 0;
+                alias {{ tftp_root }}/;
+{% elif server.mode == "proxy" %}
                 proxy_pass http://{{ server.proxy.address }}:{{ server.proxy.port }};
                 proxy_buffering off;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+{% endif %}
         }
 {% endif %}
 
@@ -152,7 +157,11 @@ def get_config():
     if not conf.exists('service https'):
         return None
     else:
-        conf.set_level('service https')
+        tftp_root = None
+        if conf.exists('service tftp-server directory'):
+            tftp_root = conf.return_value('service tftp-server directory')
+
+    conf.set_level('service https')
 
     if not conf.exists('virtual-host'):
         server_block_list.append(default_server_block)
@@ -224,7 +233,8 @@ def get_config():
 
     https = {'server_block_list' : server_block_list,
              'api_data': api_data,
-             'certbot': certbot}
+             'certbot': certbot,
+             'tftp_root' : tftp_root}
     return https
 
 def verify(https):
@@ -241,6 +251,9 @@ def verify(https):
     for sb in https['server_block_list']:
         if sb['mode'] == "proxy" and not sb['proxy']:
             raise ConfigError('Proxy mode needs a destination configured')
+
+        if sb['mode'] == "tftp" and not https['tftp_root']:
+            raise ConfigError('TFTP share mode needs tftp directory configured')
 
         if sb['cert']:
             if not sb['cert']['cert_file']:

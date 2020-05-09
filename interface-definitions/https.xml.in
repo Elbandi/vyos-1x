@@ -128,14 +128,18 @@
                     <description>Enable api for this virtual host</description>
                   </valueHelp>
                   <valueHelp>
+                    <format>tftp</format>
+                    <description>Enable tftp share for this virtual host</description>
+                  </valueHelp>
+                  <valueHelp>
                     <format>proxy</format>
                     <description>Use as a reverse proxy</description>
                   </valueHelp>
                   <completionHelp>
-                    <list>api proxy</list>
+                    <list>api tftp proxy</list>
                   </completionHelp>
                   <constraint>
-                    <regex>(api|proxy)</regex>
+                    <regex>(api|tftp|proxy)</regex>
                   </constraint>
                   <constraintErrorMessage>invalid virtualhost mode</constraintErrorMessage>
                 </properties>
