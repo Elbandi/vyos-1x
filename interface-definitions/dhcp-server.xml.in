@@ -136,6 +136,30 @@
                 boot file is to be loaded</help>
                     </properties>
                   </leafNode>
+                  <tagNode name="pxeclient">
+                    <properties>
+                      <help>Name of static mapping</help>
+                      <completionHelp>
+                        <list>x86 efi32 efi64</list>
+                      </completionHelp>
+                      <constraint>
+                        <regex>(x86|efi32|efi64)</regex>
+                      </constraint>
+                      <constraintErrorMessage>Invalid pxe architecture</constraintErrorMessage>
+                    </properties>
+                    <children>
+                      <leafNode name="bootfile-name">
+                        <properties>
+                          <help>Bootstrap file name</help>
+                        </properties>
+                      </leafNode>
+                      <leafNode name="loader-configfile">
+                        <properties>
+                          <help>Loader config</help>
+                        </properties>
+                      </leafNode>
+                    </children>
+                  </tagNode>
                   <leafNode name="client-prefix-length">
                     <properties>
                       <help>Specifies the clients subnet mask as per RFC 950. If unset, subnet declaration is used.</help>

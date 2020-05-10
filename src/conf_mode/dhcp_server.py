@@ -65,6 +65,9 @@ ddns-update-style {% if ddns_enable -%} interim {%- else -%} none {%- endif %};
 option rfc3442-static-route code 121 = array of integer 8;
 option windows-static-route code 249 = array of integer 8;
 {%- endif %}
+{% if pxeclient -%}
+option arch code 93 = unsigned integer 16;
+{% endif %}
 {% if wpad -%}
 option wpad-url code 252 = text;
 {% endif %}
@@ -179,6 +182,28 @@ shared-network {{ network.name }} {
         {%- if subnet.bootfile_server %}
         next-server {{ subnet.bootfile_server }};
         {%- endif -%}
+        {%- if subnet.pxeclient %}
+        class "pxeclients" {
+            match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
+
+            # the gateway is DHCPD + TFTPD
+            if exists dhcp-parameter-request-list {
+                # Always send the PXELINUX options (specified in hexadecimal)
+                option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
+            }
+
+            {%- for arch in subnet.pxeclient %}
+            if option arch = {{ subnet.pxeclient[arch].arch }} {
+                {%- if subnet.pxeclient[arch].filename %}
+                filename "{{ subnet.pxeclient[arch].filename }}";
+                {%- endif %}
+                {%- if subnet.pxeclient[arch].configfile %}
+                option loader-configfile "{{ subnet.pxeclient[arch].configfile }}";
+                {%- endif %}
+            }
+            {%- endfor %}
+        }
+        {%- endif -%}
         {%- if subnet.time_offset %}
         option time-offset {{ subnet.time_offset }};
         {%- endif -%}
@@ -260,10 +285,17 @@ default_config_data = {
     'hostfile_update': False,
     'host_decl_name': False,
     'static_route': False,
+    'pxeclient': False,
     'wpad': False,
     'bootp_space': set(),
     'bootp_code': [],
     'shared_network': [],
+}
+
+pxeclient_arch = {
+    'x86': '00:00',
+    'efi32': '00:06',
+    'efi64': '00:07',
 }
 
 def dhcp_slice_range(exclude_list, range_list):
@@ -466,6 +498,7 @@ def get_config():
                         'lease': '86400',
                         'ntp_server': [],
                         'pop_server': [],
+                        'pxeclient': {},
                         'server_identifier': '',
                         'smtp_server': [],
                         'range': [],
@@ -491,6 +524,17 @@ def get_config():
                     # domain name.
                     if conf.exists('bootfile-server'):
                         subnet['bootfile_server'] = conf.return_value('bootfile-server')
+
+                    if conf.exists('pxeclient'):
+                        # Required for global config section
+                        dhcp['pxeclient'] = True
+                        for arch in conf.list_nodes('pxeclient'):
+                           pxe = {
+                               'arch': pxeclient_arch[arch],
+                               'filename': conf.return_value('pxeclient {0} bootfile-name'.format(arch), ''),
+                               'configfile': conf.return_value('pxeclient {0} loader-configfile'.format(arch), '')
+                           }
+                           subnet['pxeclient'][arch] = pxe
 
                     # The subnet mask option specifies the client's subnet mask as per RFC 950. If no subnet
                     # mask option is provided anywhere in scope, as a last resort dhcpd will use the subnet
@@ -737,6 +781,10 @@ def verify(dhcp):
                 if (len(subnet['range']) == 0):
                     raise ConfigError('At least one start-stop range must be configured for {0}\n' \
                                       'to set up DHCP failover!'.format(subnet['network']))
+
+            for pxeclient in subnet['pxeclient']:
+                if subnet['pxeclient'][pxeclient]['filename'] == '' and subnet['pxeclient'][pxeclient]['configfile'] == '':
+                    raise ConfigError('At least bootfile-name or loader-configfile must be configured for {0} arch pxeclient'.format(pxeclient))
 
             # Check if DHCP address range is inside configured subnet declaration
             range_start = []
